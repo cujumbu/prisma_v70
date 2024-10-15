@@ -6,7 +6,9 @@ interface ClaimFormData {
   orderNumber: string;
   email: string;
   name: string;
-  address: string;
+  street: string;
+  postalCode: string;
+  city: string;
   phoneNumber: string;
   brand: string;
   problemDescription: string;
@@ -17,14 +19,16 @@ const ClaimForm: React.FC = () => {
     orderNumber: '',
     email: '',
     name: '',
-    address: '',
+    street: '',
+    postalCode: '',
+    city: '',
     phoneNumber: '',
     brand: '',
     problemDescription: '',
   });
+  const [notificationAcknowledged, setNotificationAcknowledged] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notificationAcknowledged, setNotificationAcknowledged] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -42,12 +46,15 @@ const ClaimForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!notificationAcknowledged) {
-      setError('Please acknowledge the brand-specific notification before submitting.');
-      return;
-    }
     setError(null);
     setIsSubmitting(true);
+
+    if (!notificationAcknowledged) {
+      setError('Please acknowledge the brand-specific notification before submitting.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/claims', {
         method: 'POST',
@@ -111,12 +118,36 @@ const ClaimForm: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
+          <label htmlFor="street" className="block text-sm font-medium text-gray-700">Street (for return shipping)</label>
           <input
             type="text"
-            id="address"
-            name="address"
-            value={formData.address}
+            id="street"
+            name="street"
+            value={formData.street}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700">Postal Code (for return shipping)</label>
+          <input
+            type="text"
+            id="postalCode"
+            name="postalCode"
+            value={formData.postalCode}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label htmlFor="city" className="block text-sm font-medium text-gray-700">City (for return shipping)</label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            value={formData.city}
             onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
