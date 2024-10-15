@@ -15,7 +15,7 @@ ALTER TABLE "Claim"
 ADD COLUMN IF NOT EXISTS "street" TEXT,
 ADD COLUMN IF NOT EXISTS "postalCode" TEXT,
 ADD COLUMN IF NOT EXISTS "city" TEXT,
-ADD COLUMN IF NOT EXISTS "notificationAcknowledged" BOOLEAN NOT NULL DEFAULT false;
+ADD COLUMN IF NOT EXISTS "notificationAcknowledged" BOOLEAN DEFAULT false;
 
 -- Update existing records
 UPDATE "Claim" SET 
