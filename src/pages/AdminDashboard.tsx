@@ -8,6 +8,13 @@ interface Claim {
   orderNumber: string;
   email: string;
   name: string;
+  address?: string;
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  phoneNumber: string;
+  brand: string;
+  problemDescription: string;
   status: string;
   submissionDate: string;
 }
@@ -15,8 +22,7 @@ interface Claim {
 const AdminDashboard: React.FC = () => {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [filteredClaims, setFilteredClaims] = useState<Claim[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>('All');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -44,17 +50,12 @@ const AdminDashboard: React.FC = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    let result = [...claims];
-    if (statusFilter !== 'All') {
-      result = result.filter(claim => claim.status === statusFilter);
+    if (statusFilter) {
+      setFilteredClaims(claims.filter(claim => claim.status === statusFilter));
+    } else {
+      setFilteredClaims(claims);
     }
-    result.sort((a, b) => {
-      const dateA = new Date(a.submissionDate).getTime();
-      const dateB = new Date(b.submissionDate).getTime();
-      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-    });
-    setFilteredClaims(result);
-  }, [claims, statusFilter, sortOrder]);
+  }, [statusFilter, claims]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
@@ -83,39 +84,33 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatusFilter(event.target.value);
-  };
-
-  const toggleSortOrder = () => {
-    setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+  const getFormattedAddress = (claim: Claim) => {
+    if (claim.street && claim.postalCode && claim.city) {
+      return `${claim.street}, ${claim.postalCode} ${claim.city}`;
+    } else if (claim.address) {
+      return claim.address;
+    } else {
+      return 'Address not provided';
+    }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <div className="mb-4 flex justify-between items-center">
-        <div>
-          <label htmlFor="statusFilter" className="mr-2">Filter by Status:</label>
-          <select
-            id="statusFilter"
-            value={statusFilter}
-            onChange={handleFilterChange}
-            className="border rounded p-1"
-          >
-            <option value="All">All</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
-        <button
-          onClick={toggleSortOrder}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      <div className="mb-4">
+        <label htmlFor="statusFilter" className="mr-2">Filter by Status:</label>
+        <select
+          id="statusFilter"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="border rounded p-1"
         >
-          Sort {sortOrder === 'asc' ? '↑' : '↓'}
-        </button>
+          <option value="">All</option>
+          <option value="Pending">Pending</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white">
@@ -129,6 +124,15 @@ const AdminDashboard: React.FC = () => {
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Email
+              </th>
+              <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Address
+              </th>
+              <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Phone
+              </th>
+              <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Brand
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Status
@@ -147,6 +151,9 @@ const AdminDashboard: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap">{claim.orderNumber}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{claim.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{claim.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{getFormattedAddress(claim)}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{claim.phoneNumber}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{claim.brand}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{claim.status}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{new Date(claim.submissionDate).toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
