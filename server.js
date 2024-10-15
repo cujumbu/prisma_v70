@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sendClaimSubmissionEmail, sendClaimStatusUpdateEmail } from './src/services/emailService.js';
-import fs from 'fs';
 
 dotenv.config();
 
@@ -20,10 +19,6 @@ const prisma = new PrismaClient();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Debug: Log package.json contents
-console.log('package.json contents:');
-console.log(fs.readFileSync('package.json', 'utf8'));
-
 // Middleware to check database connection
 app.use(async (req, res, next) => {
   try {
@@ -37,25 +32,13 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Route to fetch all brands
-app.get('/api/brands', async (req, res) => {
-  try {
-    const brands = await prisma.brand.findMany();
-    res.json(brands);
-  } catch (error) {
-    console.error('Error fetching brands:', error);
-    res.status(500).json({ error: 'An error occurred while fetching brands' });
-  }
-});
-
 // Updated route for claim creation with improved error handling and email notification
 app.post('/api/claims', async (req, res) => {
   console.log('Received claim creation request');
   try {
     console.log('Received claim data:', req.body);
     
-    // Validate required fields
-    const requiredFields = ['orderNumber', 'email', 'name', 'address', 'phoneNumber', 'brand', 'problemDescription', 'notificationAcknowledged'];
+    const requiredFields = ['orderNumber', 'email', 'name', 'phoneNumber', 'brand', 'problemDescription', 'notificationAcknowledged'];
     const missingFields = requiredFields.filter(field => !req.body[field]);
     
     if (missingFields.length > 0) {
@@ -67,10 +50,25 @@ app.post('/api/claims', async (req, res) => {
       return res.status(400).json({ error: 'Brand notification must be acknowledged' });
     }
 
+    // Handle both old and new address formats
+    let addressData = {};
+    if (req.body.address) {
+      addressData.address = req.body.address;
+    } else if (req.body.street && req.body.postalCode && req.body.city) {
+      addressData = {
+        street: req.body.street,
+        postalCode: req.body.postalCode,
+        city: req.body.city,
+      };
+    } else {
+      return res.status(400).json({ error: 'Address information is incomplete' });
+    }
+
     console.log('Creating new claim in the database...');
     const newClaim = await prisma.claim.create({
       data: {
         ...req.body,
+        ...addressData,
         status: 'Pending',
       },
     });
@@ -192,6 +190,17 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'An error occurred during login' });
+  }
+});
+
+// Route to fetch all brands
+app.get('/api/brands', async (req, res) => {
+  try {
+    const brands = await prisma.brand.findMany();
+    res.json(brands);
+  } catch (error) {
+    console.error('Error fetching brands:', error);
+    res.status(500).json({ error: 'An error occurred while fetching brands' });
   }
 });
 
