@@ -15,7 +15,6 @@ model Claim {
   orderNumber             String   @unique
   email                   String
   name                    String
-  address                 String?  // Keep the old field for backward compatibility
   street                  String?
   postalCode              String?
   city                    String?
