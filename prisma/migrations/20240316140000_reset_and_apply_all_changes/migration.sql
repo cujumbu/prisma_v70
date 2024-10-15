@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS "Claim";
 DROP TABLE IF EXISTS "Brand";
 
 -- Keep the User table, but recreate it to ensure it's up to date
-CREATE TABLE "User" (
+CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE "User" (
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
 
 -- Recreate Claim table with new structure
 CREATE TABLE "Claim" (
@@ -31,7 +31,7 @@ CREATE TABLE "Claim" (
     CONSTRAINT "Claim_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "Claim_orderNumber_key" ON "Claim"("orderNumber");
+CREATE UNIQUE INDEX IF NOT EXISTS "Claim_orderNumber_key" ON "Claim"("orderNumber");
 
 -- Create Brand table
 CREATE TABLE "Brand" (
@@ -41,4 +41,4 @@ CREATE TABLE "Brand" (
     CONSTRAINT "Brand_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "Brand_name_key" ON "Brand"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "Brand_name_key" ON "Brand"("name");
