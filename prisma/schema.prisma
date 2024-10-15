@@ -11,17 +11,20 @@ datasource db {
 }
 
 model Claim {
-  id                 String   @id @default(uuid())
-  orderNumber        String   @unique
-  email              String
-  name               String
-  address            String
-  phoneNumber        String
-  brand              String
-  problemDescription String
-  status             String
-  submissionDate     DateTime @default(now())
-  notificationAcknowledged Boolean @default(false)
+  id                      String   @id @default(uuid())
+  orderNumber             String   @unique
+  email                   String
+  name                    String
+  address                 String?  // Keep the old field for backward compatibility
+  street                  String?
+  postalCode              String?
+  city                    String?
+  phoneNumber             String
+  brand                   String
+  problemDescription      String
+  status                  String
+  submissionDate          DateTime @default(now())
+  notificationAcknowledged Boolean  @default(false)
 }
 
 model User {
