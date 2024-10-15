@@ -14,6 +14,9 @@ interface Claim {
 
 const AdminDashboard: React.FC = () => {
   const [claims, setClaims] = useState<Claim[]>([]);
+  const [filteredClaims, setFilteredClaims] = useState<Claim[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>('All');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -31,6 +34,7 @@ const AdminDashboard: React.FC = () => {
         }
         const claimsData = await response.json();
         setClaims(claimsData);
+        setFilteredClaims(claimsData);
       } catch (error) {
         console.error('Error fetching claims:', error);
       }
@@ -38,6 +42,19 @@ const AdminDashboard: React.FC = () => {
 
     fetchClaims();
   }, [user, navigate]);
+
+  useEffect(() => {
+    let result = [...claims];
+    if (statusFilter !== 'All') {
+      result = result.filter(claim => claim.status === statusFilter);
+    }
+    result.sort((a, b) => {
+      const dateA = new Date(a.submissionDate).getTime();
+      const dateB = new Date(b.submissionDate).getTime();
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+    setFilteredClaims(result);
+  }, [claims, statusFilter, sortOrder]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
@@ -66,9 +83,40 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(event.target.value);
+  };
+
+  const toggleSortOrder = () => {
+    setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+      <div className="mb-4 flex justify-between items-center">
+        <div>
+          <label htmlFor="statusFilter" className="mr-2">Filter by Status:</label>
+          <select
+            id="statusFilter"
+            value={statusFilter}
+            onChange={handleFilterChange}
+            className="border rounded p-1"
+          >
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+        <button
+          onClick={toggleSortOrder}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Sort {sortOrder === 'asc' ? '↑' : '↓'}
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white">
           <thead>
@@ -94,7 +142,7 @@ const AdminDashboard: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {claims.map((claim) => (
+            {filteredClaims.map((claim) => (
               <tr key={claim.id}>
                 <td className="px-6 py-4 whitespace-nowrap">{claim.orderNumber}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{claim.name}</td>
