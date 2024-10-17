@@ -1,58 +1,85 @@
--- Drop existing tables
-DROP TABLE IF EXISTS "Claim";
-DROP TABLE IF EXISTS "Brand";
-DROP TABLE IF EXISTS "_prisma_migrations";
+-- Function to check if a table exists
+CREATE OR REPLACE FUNCTION table_exists(tbl text) RETURNS boolean AS $$
+DECLARE
+  exists boolean;
+BEGIN
+  SELECT count(*) > 0 INTO exists
+  FROM information_schema.tables
+  WHERE table_schema = 'public'
+    AND table_name = tbl;
+  RETURN exists;
+END;
+$$ LANGUAGE plpgsql;
 
--- Recreate _prisma_migrations table
-CREATE TABLE "_prisma_migrations" (
-    "id" VARCHAR(36) NOT NULL,
-    "checksum" VARCHAR(64) NOT NULL,
-    "finished_at" TIMESTAMP WITH TIME ZONE,
-    "migration_name" VARCHAR(255) NOT NULL,
-    "logs" TEXT,
-    "rolled_back_at" TIMESTAMP WITH TIME ZONE,
-    "started_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    "applied_steps_count" INTEGER NOT NULL DEFAULT 0,
-    PRIMARY KEY ("id")
-);
+-- Create _prisma_migrations table if it doesn't exist
+DO $$ BEGIN
+  IF NOT table_exists('_prisma_migrations') THEN
+    CREATE TABLE "_prisma_migrations" (
+      "id" VARCHAR(36) PRIMARY KEY,
+      "checksum" VARCHAR(64) NOT NULL,
+      "finished_at" TIMESTAMP WITH TIME ZONE,
+      "migration_name" VARCHAR(255) NOT NULL,
+      "logs" TEXT,
+      "rolled_back_at" TIMESTAMP WITH TIME ZONE,
+      "started_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+      "applied_steps_count" INTEGER NOT NULL DEFAULT 0
+    );
+  END IF;
+END $$;
 
--- Recreate User table
-CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
-    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
+-- Create User table if it doesn't exist
+DO $$ BEGIN
+  IF NOT table_exists('User') THEN
+    CREATE TABLE "User" (
+      "id" TEXT PRIMARY KEY,
+      "email" TEXT UNIQUE NOT NULL,
+      "password" TEXT NOT NULL,
+      "isAdmin" BOOLEAN NOT NULL DEFAULT false
+    );
+  END IF;
+END $$;
 
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+-- Create Claim table if it doesn't exist
+DO $$ BEGIN
+  IF NOT table_exists('Claim') THEN
+    CREATE TABLE "Claim" (
+      "id" TEXT PRIMARY KEY,
+      "orderNumber" TEXT UNIQUE NOT NULL,
+      "email" TEXT NOT NULL,
+      "name" TEXT NOT NULL,
+      "street" TEXT,
+      "postalCode" TEXT,
+      "city" TEXT,
+      "phoneNumber" TEXT NOT NULL,
+      "brand" TEXT NOT NULL,
+      "problemDescription" TEXT NOT NULL,
+      "status" TEXT NOT NULL,
+      "submissionDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "notificationAcknowledged" BOOLEAN NOT NULL DEFAULT false
+    );
+  ELSE
+    -- Add new columns if they don't exist
+    DO $$ BEGIN
+      ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "street" TEXT;
+      ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "postalCode" TEXT;
+      ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "city" TEXT;
+      ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "notificationAcknowledged" BOOLEAN NOT NULL DEFAULT false;
+    EXCEPTION
+      WHEN duplicate_column THEN NULL;
+    END $$;
+  END IF;
+END $$;
 
--- Recreate Claim table with new structure
-CREATE TABLE "Claim" (
-    "id" TEXT NOT NULL,
-    "orderNumber" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "street" TEXT,
-    "postalCode" TEXT,
-    "city" TEXT,
-    "phoneNumber" TEXT NOT NULL,
-    "brand" TEXT NOT NULL,
-    "problemDescription" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
-    "submissionDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "notificationAcknowledged" BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT "Claim_pkey" PRIMARY KEY ("id")
-);
+-- Create Brand table if it doesn't exist
+DO $$ BEGIN
+  IF NOT table_exists('Brand') THEN
+    CREATE TABLE "Brand" (
+      "id" TEXT PRIMARY KEY,
+      "name" TEXT UNIQUE NOT NULL,
+      "notification" TEXT NOT NULL
+    );
+  END IF;
+END $$;
 
-CREATE UNIQUE INDEX "Claim_orderNumber_key" ON "Claim"("orderNumber");
-
--- Create Brand table
-CREATE TABLE "Brand" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "notification" TEXT NOT NULL,
-    CONSTRAINT "Brand_pkey" PRIMARY KEY ("id")
-);
-
-CREATE UNIQUE INDEX "Brand_name_key" ON "Brand"("name");
+-- Drop the temporary function
+DROP FUNCTION table_exists(text);
