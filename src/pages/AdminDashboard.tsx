@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { sendStatusUpdateEmail } from '../utils/emailService';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 
 interface Claim {
   id: string;
@@ -23,6 +23,7 @@ const AdminDashboard: React.FC = () => {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [filteredClaims, setFilteredClaims] = useState<Claim[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { user } = useAuth();
@@ -52,12 +53,12 @@ const AdminDashboard: React.FC = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (statusFilter) {
-      setFilteredClaims(claims.filter(claim => claim.status === statusFilter));
-    } else {
-      setFilteredClaims(claims);
-    }
-  }, [statusFilter, claims]);
+    const filtered = claims.filter(claim => 
+      (statusFilter ? claim.status === statusFilter : true) &&
+      (searchTerm ? claim.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) : true)
+    );
+    setFilteredClaims(filtered);
+  }, [statusFilter, searchTerm, claims]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
@@ -118,20 +119,36 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <div className="mb-4">
-        <label htmlFor="statusFilter" className="mr-2">Filter by Status:</label>
-        <select
-          id="statusFilter"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border rounded p-1"
-        >
-          <option value="">All</option>
-          <option value="Pending">Pending</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Resolved">Resolved</option>
-          <option value="Rejected">Rejected</option>
-        </select>
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <div className="flex-grow">
+          <label htmlFor="statusFilter" className="mr-2">Filter by Status:</label>
+          <select
+            id="statusFilter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border rounded p-1"
+          >
+            <option value="">All</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+        <div className="flex-grow">
+          <label htmlFor="searchInput" className="mr-2">Search by Order Number:</label>
+          <div className="relative">
+            <input
+              id="searchInput"
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Enter order number"
+              className="border rounded p-1 pl-8 w-full"
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          </div>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white">
