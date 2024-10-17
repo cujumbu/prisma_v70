@@ -7,7 +7,7 @@ async function markMigrationAsApplied() {
     await prisma.$executeRaw`
       INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count)
       VALUES (
-        '20240316160000_reset_and_apply_all_changes',
+        '20240316160000',
         'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         NOW(),
         '20240316160000_reset_and_apply_all_changes',
