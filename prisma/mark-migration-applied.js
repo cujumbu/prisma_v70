@@ -7,10 +7,10 @@ async function markMigrationAsApplied() {
     await prisma.$executeRaw`
       INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count)
       VALUES (
-        '20240316124500_make_address_fields_nullable',
+        '20240316160000_reset_and_apply_all_changes',
         'marked-as-applied-manually',
         NOW(),
-        '20240316124500_make_address_fields_nullable',
+        '20240316160000_reset_and_apply_all_changes',
         'Marked as applied manually to resolve migration issues',
         NULL,
         NOW(),
