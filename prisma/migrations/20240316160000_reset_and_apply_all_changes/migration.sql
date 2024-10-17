@@ -61,11 +61,22 @@ DO $$ BEGIN
     -- Add new columns if they don't exist
     DO $$ BEGIN
       ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "street" TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+    
+    DO $$ BEGIN
       ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "postalCode" TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+    
+    DO $$ BEGIN
       ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "city" TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+    
+    DO $$ BEGIN
       ALTER TABLE "Claim" ADD COLUMN IF NOT EXISTS "notificationAcknowledged" BOOLEAN NOT NULL DEFAULT false;
-    EXCEPTION
-      WHEN duplicate_column THEN NULL;
+    EXCEPTION WHEN duplicate_column THEN NULL;
     END $$;
   END IF;
 END $$;
@@ -82,4 +93,4 @@ DO $$ BEGIN
 END $$;
 
 -- Drop the temporary function
-DROP FUNCTION table_exists(text);
+DROP FUNCTION IF EXISTS table_exists(text);
