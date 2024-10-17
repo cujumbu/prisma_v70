@@ -1,8 +1,17 @@
--- Drop existing tables
-DROP TABLE IF EXISTS "Claim";
-DROP TABLE IF EXISTS "Brand";
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
+    "id" VARCHAR(36) NOT NULL,
+    "checksum" VARCHAR(64) NOT NULL,
+    "finished_at" TIMESTAMP WITH TIME ZONE,
+    "migration_name" VARCHAR(255) NOT NULL,
+    "logs" TEXT,
+    "rolled_back_at" TIMESTAMP WITH TIME ZONE,
+    "started_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    "applied_steps_count" INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY ("id")
+);
 
--- Keep the User table, but recreate it to ensure it's up to date
+-- CreateTable
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -11,10 +20,8 @@ CREATE TABLE IF NOT EXISTS "User" (
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
-
--- Recreate Claim table with new structure
-CREATE TABLE "Claim" (
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "Claim" (
     "id" TEXT NOT NULL,
     "orderNumber" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -31,14 +38,19 @@ CREATE TABLE "Claim" (
     CONSTRAINT "Claim_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS "Claim_orderNumber_key" ON "Claim"("orderNumber");
-
--- Create Brand table
-CREATE TABLE "Brand" (
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "Brand" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "notification" TEXT NOT NULL,
     CONSTRAINT "Brand_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "Claim_orderNumber_key" ON "Claim"("orderNumber");
+
+-- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "Brand_name_key" ON "Brand"("name");
