@@ -31,15 +31,21 @@ const brands = [
 
 async function main() {
   console.log('Start seeding...');
-  for (const brand of brands) {
-    const createdBrand = await prisma.brand.upsert({
-      where: { name: brand.name },
-      update: {},
-      create: brand,
-    });
-    console.log(`Created brand with id: ${createdBrand.id}`);
+  
+  // Check if brands already exist
+  const existingBrands = await prisma.brand.findMany();
+  
+  if (existingBrands.length === 0) {
+    for (const brand of brands) {
+      const createdBrand = await prisma.brand.create({
+        data: brand,
+      });
+      console.log(`Created brand with id: ${createdBrand.id}`);
+    }
+    console.log('Seeding finished.');
+  } else {
+    console.log('Brands already exist. Skipping seed.');
   }
-  console.log('Seeding finished.');
 }
 
 main()
