@@ -24,6 +24,7 @@ const AdminDashboard: React.FC = () => {
   const [filteredClaims, setFilteredClaims] = useState<Claim[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -93,8 +94,21 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleViewDetails = (claim: Claim) => {
-    setSelectedClaim(claim);
+  const handleViewDetails = async (claimId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/claims/${claimId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch claim details');
+      }
+      const claimDetails = await response.json();
+      setSelectedClaim(claimDetails);
+    } catch (error) {
+      console.error('Error fetching claim details:', error);
+      // Handle error (e.g., show an error message to the user)
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const closeModal = () => {
@@ -163,7 +177,7 @@ const AdminDashboard: React.FC = () => {
                     <option value="Rejected">Rejected</option>
                   </select>
                   <button
-                    onClick={() => handleViewDetails(claim)}
+                    onClick={() => handleViewDetails(claim.id)}
                     className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                   >
                     View Details
@@ -180,38 +194,42 @@ const AdminDashboard: React.FC = () => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3 text-center">
               <h3 className="text-lg leading-6 font-medium text-gray-900">Claim Details</h3>
-              <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
-                  <strong>Order Number:</strong> {selectedClaim.orderNumber}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>Name:</strong> {selectedClaim.name}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>Email:</strong> {selectedClaim.email}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>Phone:</strong> {selectedClaim.phoneNumber}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>Address:</strong> {getFormattedAddress(selectedClaim)}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>Brand:</strong> {selectedClaim.brand}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>Status:</strong> {selectedClaim.status}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>Submission Date:</strong> {new Date(selectedClaim.submissionDate).toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  <strong>Problem Description:</strong>
-                </p>
-                <p className="text-sm text-gray-500 mt-1 text-left">
-                  {selectedClaim.problemDescription}
-                </p>
-              </div>
+              {isLoading ? (
+                <p>Loading...</p>
+              ) : (
+                <div className="mt-2 px-7 py-3">
+                  <p className="text-sm text-gray-500">
+                    <strong>Order Number:</strong> {selectedClaim.orderNumber}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Name:</strong> {selectedClaim.name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Email:</strong> {selectedClaim.email}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Phone:</strong> {selectedClaim.phoneNumber}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Address:</strong> {getFormattedAddress(selectedClaim)}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Brand:</strong> {selectedClaim.brand}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Status:</strong> {selectedClaim.status}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Submission Date:</strong> {new Date(selectedClaim.submissionDate).toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    <strong>Problem Description:</strong>
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1 text-left">
+                    {selectedClaim.problemDescription}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="items-center px-4 py-3">
               <button
